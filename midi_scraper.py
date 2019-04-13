@@ -15,7 +15,7 @@ def get_all_links(url):
     website = urlopen(url)
     # get the html code
     html = website.read()
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html,features="html.parser")
 
     links = soup.find_all('mid')
 
