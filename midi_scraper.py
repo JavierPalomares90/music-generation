@@ -18,17 +18,6 @@ from bs4 import BeautifulSoup
 import errno
 from datetime import datetime
 
-def get_status_code(link):
-    """
-    Return the error code for any url
-    param: link
-    """
-    try:
-        error_code = requests.get(link).status_code
-    except requests.exceptions.ConnectionError:
-        error_code = 500
-    return error_code
-
 def get_soup(url):
     """
     Return the BeautifulSoup object for input link
@@ -68,32 +57,34 @@ def download_midis(url,midis,save_dir):
         
 
 # find all of the sub_urls in a root url
-def get_all_sub_urls(source_url,depth = 0, max_depth = 5):
+def get_all_sub_urls(source_url,depth = 0, max_depth = 5,all_urls = []):
         if depth > max_depth:
                 return {}
-        all_urls_info = []
-        status_dict = {}
+        all_urls = []
         soup = get_soup(source_url)
         a_tags = soup.findAll("a", href=True)
+        if source_url not in all_urls:
+                all_urls.append(source_url)
         for a_tag in a_tags:
             if "http" not in a_tag["href"] and "/" in a_tag["href"]:
-                url = "http://www.lufthansa.com" + a_tag['href']
+                url = source_url + a_tag['href']
+                if url not in all_urls:
+                        all_urls.append(url)
+                        get_all_sub_urls(url,depth+1,max_depth,all_urls)
             elif "http" in a_tag["href"]:
                 url = a_tag["href"]
+                if url not in all_urls:
+                        all_urls.append(url)
+                        get_all_sub_urls(url,depth+1,max_depth,all_urls)
             else:
                 continue
-            status_dict["url"] = url
-            status_dict["status_code"] = get_status_code(url)
-            status_dict["timestamp"] = datetime.now()
-            status_dict["depth"] = depth + 1
-            all_urls_info.append(status_dict)
-        return all_urls_info
 
 
 def get_midis(source_url,save_dir,recursive=False):
         if (recursive == True):
+                urls = []
                 max_depth = 4
-                urls = get_all_sub_urls(source_url,0,max_depth)
+                get_all_sub_urls(source_url,0,max_depth,urls)
         else:
                 urls = [source_url]
         for url in urls:
