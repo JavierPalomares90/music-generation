@@ -66,18 +66,19 @@ def get_all_sub_urls(source_url,depth = 0, max_depth = 5,all_urls = []):
         if source_url not in all_urls:
                 all_urls.append(source_url)
         for a_tag in a_tags:
-            if "http" not in a_tag["href"] and "/" in a_tag["href"]:
-                url = source_url + a_tag['href']
-                if url not in all_urls:
-                        all_urls.append(url)
-                        get_all_sub_urls(url,depth+1,max_depth,all_urls)
-            elif "http" in a_tag["href"]:
-                url = a_tag["href"]
-                if url not in all_urls:
-                        all_urls.append(url)
-                        get_all_sub_urls(url,depth+1,max_depth,all_urls)
-            else:
-                continue
+                href_val =  a_tag["href"]
+                if "http" in href_val or "https" in href_val:
+                        url = href_val
+                        if url not in all_urls:
+                                all_urls.append(url)
+                                get_all_sub_urls(url,depth+1,max_depth,all_urls)
+                elif href_val.endswith('html') or href_val.endswith('htm'):
+                        url = source_url + '/' + href_val
+                        if url not in all_urls:
+                                all_urls.append(url)
+                                get_all_sub_urls(url,depth+1,max_depth,all_urls)
+                else:
+                        continue
 
 
 def get_midis(source_url,save_dir,recursive=False):
