@@ -10,15 +10,13 @@ from os import listdir
 from os.path import isfile, join
 from bs4 import BeautifulSoup
 
-def get_all_links(url):
+def get_all_midi_links(url):
     # connect to the url
     website = urlopen(url)
     # get the html code
     html = website.read()
     soup = BeautifulSoup(html,features="html.parser")
-
-    links = soup.find_all('mid')
-
+    links = soup.findAll(href=re.compile("\.mid$"))
     return links
 
 # get all the links that go to midi files
@@ -51,9 +49,8 @@ def main():
     args = vars(parser.parse_args())
     source_url = args["url"]
     save_dir = args["directory"]
-    links = get_all_links(source_url)
-    midis = get_midi_links(links)
-    download_midis(midis,save_dir)
+    midi_links = get_all_midi_links(source_url)
+    download_midis(midi_links,save_dir)
 
 
 if __name__=='__main__':
