@@ -4,39 +4,39 @@
 import argparse
 import heapq
 import re
-from urllib.request import urlopen
+from urllib.request import urlopen,urlretrieve
 from urllib.parse import urlparse
+import os
 from os import listdir
 from os.path import isfile, join
 from bs4 import BeautifulSoup
 
+# get all the links that go to midi files
 def get_all_midi_links(url):
     # connect to the url
     website = urlopen(url)
     # get the html code
     html = website.read()
     soup = BeautifulSoup(html,features="html.parser")
-    links = soup.findAll(href=re.compile("\.mid$"))
+    links = soup.findAll(href=re.compile(r"\.mid$"))
     return links
 
-# get all the links that go to midi files
-def get_midi_links(links):
-    midis = []
-    pattern = re.compile(".*\.mid")
-    for tuple in links:
-        link = tuple[0]
-        matches = re.match(pattern,link)
-        if matches:
-            midis.append(link)
-    return midis 
-
-def download_midis(midis,save_dir):
+def download_midis(url,midis,save_dir):
     for midi_link in midis:
-        midi = urlopen(midi_link)
-        output = urlparse(midi_link)
-        print("Downloading {}".format(midi_link))
-        file_name = os.path.basename[output[2]]
-        path = save_dir + file_name
+        file_name = midi_link.get('href')
+        dl_link = url + '/' + file_name
+        midi = urlopen(dl_link)
+        output = urlparse(dl_link)
+        print("Downloading {}".format(dl_link))
+        path = os.path.join(save_dir,file_name)
+        dir_path = os.path.dirname(path)
+        if not os.path.exists(dir_path):
+                try:
+                        os.makedirs(dir_path)
+                except OSError as exc: # Guard against race condition
+                        if exc.errno != errno.EEXIST:
+                                raise
+                
         f = open(path,'wb+')
         f.write(midi.read())
         f.close()
@@ -50,8 +50,7 @@ def main():
     source_url = args["url"]
     save_dir = args["directory"]
     midi_links = get_all_midi_links(source_url)
-    download_midis(midi_links,save_dir)
-
+    download_midis(source_url,midi_links,save_dir)
 
 if __name__=='__main__':
     main()
