@@ -5,11 +5,13 @@ import argparse
 import heapq
 import re
 from urllib.request import urlopen,urlretrieve
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlsplit
 import os
 from os import listdir
 from os.path import isfile, join
 from bs4 import BeautifulSoup
+import errno
+import requests
 
 # get all the links that go to midi files
 def get_all_midi_links(url):
@@ -18,15 +20,16 @@ def get_all_midi_links(url):
     # get the html code
     html = website.read()
     soup = BeautifulSoup(html,features="html.parser")
-    links = soup.findAll(href=re.compile(r"\.mid$"))
+    links = soup.findAll(href=re.compile(r"\.mid$",re.IGNORECASE))
     return links
 
 def download_midis(url,midis,save_dir):
+    base_url = "{0.scheme}://{0.netloc}/".format(urlsplit(url))
     for midi_link in midis:
         file_name = midi_link.get('href')
-        dl_link = url + '/' + file_name
-        midi = urlopen(dl_link)
-        output = urlparse(dl_link)
+        file_name = file_name.strip("/")
+        dl_link = base_url + file_name
+        r = requests.get(dl_link)
         print("Downloading {}".format(dl_link))
         path = os.path.join(save_dir,file_name)
         dir_path = os.path.dirname(path)
@@ -38,7 +41,7 @@ def download_midis(url,midis,save_dir):
                                 raise
                 
         f = open(path,'wb+')
-        f.write(midi.read())
+        f.write(r.content)
         f.close()
 
 
