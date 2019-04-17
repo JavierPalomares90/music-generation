@@ -13,7 +13,7 @@ def get_midi_paths(dir):
     for root,dirs,files in os.walk(dir):
         for file in files:
             if file.endswith(".mid"):
-                paths.append(os.join(root,file))
+                paths.append(os.path.join(root,file))
     return paths
 
 def get_pandas_dataframes(paths):
