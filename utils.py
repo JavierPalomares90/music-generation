@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 import os, argparse, time
+from multiprocessing import Pool as ThreadPool
+from reformat_midi import reformat_midi
+import pandas as pd
+import pymidifile
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -45,6 +49,51 @@ def parse_args():
                         ' A higher value trains faster but uses more RAM. A lower value '\
                         'uses less RAM but takes significantly longer to train.')
     return parser.parse_args()
+
+def get_data(midis):
+    #TODO: Complete impl
+    pass
+
+# lazily load the midi data
+def get_midi_data(midi_paths, window_size=20, batch_size=32, num_threads=8,max_files_in_ram=170):
+    if num_threads > 1:
+        pool = ThreadPool(num_threads)
+
+    load_index = 0
+
+    while True:
+        load_files = midi_paths[load_index:load_index + max_files_in_ram]
+
+        # print('loading large batch: {}'.format(max_files_in_ram))
+        # print('Parsing midi files...')
+        # start_time = time.time()
+        if num_threads > 1:
+       		midi_pandas = pool.map(get_midi_as_pandas, load_files)
+       	else:
+       		midi_pandas = map(get_midi_as_pandas, load_files)
+        # print('Finished in {:.2f} seconds'.format(time.time() - start_time))
+        # print('parsed, now extracting data')
+        data = get_data(midi_pandas)
+        batch_index = 0
+        while batch_index + batch_size < len(data[0]):
+            # print('getting data...')
+            # print('yielding small batch: {}'.format(batch_size))
+            
+            res = (data[0][batch_index: batch_index + batch_size], 
+                   data[1][batch_index: batch_index + batch_size])
+            yield res
+            batch_index = batch_index + batch_size
+        
+        # probably unneeded but why not
+        del parsed # free the mem
+        del data # free the mem
+
+
+def get_midi_as_pandas(midi_file):
+    midi_obj = reformat_midi(midi_file)
+    midi_pandas = pymidifile.mid_to_matrix(midiob,output='pandas')
+    return midi_pandas
+    
 
 def get_midi_paths(dir):
     # Find all the midi files in the directory
