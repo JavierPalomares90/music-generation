@@ -115,11 +115,11 @@ def main():
     args = utils.parse_args()
     data_dir = args.data_dir
     utils.log("looking for midi files from {}".format(data_dir))
-    midi_files = utils.get_midi_files_path(data_dir)
+    midi_files = utils.get_midi_paths(data_dir)
     experiment_dir = utils.create_experiment_dir(args.experiment_dir)
     utils.log("Created experiment directory {}".format(experiment_dir))
 
-    val_split_index = int(midi_files * VALIDATION_SPLIT_RATE)
+    val_split_index = len(midi_files) - int(len(midi_files) * VALIDATION_SPLIT_RATE)
     utils.log("Loading midi files from {}".format(data_dir))
     train_data = utils.get_midi_data(midi_files[0:val_split_index])
     val_data = utils.get_midi_data(midi_files[val_split_index:])
@@ -138,11 +138,11 @@ def main():
     num_windows = 827
     #average number of length-20 windows
     start_time = time.time()
-    model.fit_generator(train_generator,
+    model.fit_generator(train_data,
                         steps_per_epoch=len(midi_files) * num_windows / args.batch_size, 
                         epochs=args.num_epochs,
-                        validation_data=val_generator, 
-                        validation_steps=len(midi_files) * VALIDATION_SPLIT_RATE * magic_number / args.batch_size,
+                        validation_data=val_data,
+                        validation_steps=len(midi_files) * VALIDATION_SPLIT_RATE * num_windows/ args.batch_size,
                         verbose=1, 
                         callbacks=callbacks,
                         initial_epoch=epoch)

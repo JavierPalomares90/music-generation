@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 import os, argparse, time
 from multiprocessing import Pool as ThreadPool
-from reformat_midi import reformat_midi
 import pandas as pd
-import pymidifile
+from pymidifile import *
 
 def log(msg,verbose = 1):
     if verbose:
@@ -83,7 +82,7 @@ def get_midi_data(midi_paths,max_num_dfs = 100):
     dfs = [] * num_dfs
     for i in range(num_dfs):
         midi_file = midi_paths[i]
-        df = get_midi_as_pandas(midi_file)
+        df = get_midi_as_pandas(midi_file,reformat=False)
         dfs[i] = df
     return dfs;
     
@@ -122,9 +121,10 @@ def get_midi_data_lazily(midi_paths, window_size=20, batch_size=32, num_threads=
         del data # free the mem
 
 
-def get_midi_as_pandas(midi_file):
-    midi_obj = reformat_midi(midi_file)
-    midi_pandas = pymidifile.mid_to_matrix(midiob,output='pandas')
+def get_midi_as_pandas(midi_file,reformat = False):
+    if reformat:
+        midi_file = reformat_midi(midi_file)
+    midi_pandas = pymidifile.mid_to_matrix(midi_file,output='pandas')
     return midi_pandas
     
 
