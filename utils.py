@@ -5,6 +5,10 @@ from reformat_midi import reformat_midi
 import pandas as pd
 import pymidifile
 
+def log(msg,verbose = 1):
+    if verbose:
+        print('LOG: {}'.format(msg))
+
 def parse_args():
     parser = argparse.ArgumentParser(
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -54,8 +58,37 @@ def get_data(midis):
     #TODO: Complete impl
     pass
 
+def load_model_from_checkpoint(model_dir):
+    
+    '''Loads the best performing model from checkpoint_dir'''
+    with open(os.path.join(model_dir, 'model.json'), 'r') as f:
+        model = model_from_json(f.read())
+
+    epoch = 0
+    newest_checkpoint = max(glob.iglob(model_dir + 
+    	                    '/checkpoints/*.hdf5'), 
+                            key=os.path.getctime)
+
+    if newest_checkpoint: 
+       epoch = int(newest_checkpoint[-22:-19])
+       model.load_weights(newest_checkpoint)
+
+    return model, epoch
+
+def get_midi_data(midi_paths,max_num_dfs = 100):
+    num_files = len(midi_paths)
+    num_dfs = num_files
+    if(num_files > max_num_dfs):
+        num_dfs = max_num_dfs
+    dfs = [] * num_dfs
+    for i in range(num_dfs):
+        midi_file = midi_paths[i]
+        df = get_midi_as_pandas(midi_file)
+        dfs[i] = df
+    return dfs;
+    
 # lazily load the midi data
-def get_midi_data(midi_paths, window_size=20, batch_size=32, num_threads=8,max_files_in_ram=170):
+def get_midi_data_lazily(midi_paths, window_size=20, batch_size=32, num_threads=8,max_files_in_ram=170):
     if num_threads > 1:
         pool = ThreadPool(num_threads)
 
@@ -142,3 +175,7 @@ def create_experiment_dir(experiment_dir, verbose=False):
     	verbose)
 
     return experiment_dir
+
+def save_model(model,directory):
+    with open(os.path.join(directory, 'model.json'), 'w') as f:
+        f.write(model.to_json())
