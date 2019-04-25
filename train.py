@@ -135,6 +135,19 @@ def main():
 
     callbacks = get_tf_callbacks(experiment_dir)
     utils.log("fitting model")
+    num_windows = 827
+    #average number of length-20 windows
+    start_time = time.time()
+    model.fit_generator(train_generator,
+                        steps_per_epoch=len(midi_files) * num_windows / args.batch_size, 
+                        epochs=args.num_epochs,
+                        validation_data=val_generator, 
+                        validation_steps=len(midi_files) * VALIDATION_SPLIT_RATE * magic_number / args.batch_size,
+                        verbose=1, 
+                        callbacks=callbacks,
+                        initial_epoch=epoch)
+    utils.log('Finished in {:.2f} seconds'.format(time.time() - start_time), args.verbose)
+
 
 
 if __name__ == '__main__':
