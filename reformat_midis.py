@@ -3,6 +3,7 @@
 import utils
 from pymidifile import *
 import argparse
+import os
 
 def main():
     parser = argparse.ArgumentParser(
@@ -15,7 +16,13 @@ def main():
     data_dir = args["data_dir"]
     midi_paths = utils.get_midi_paths(data_dir)
     for p in midi_paths:
-        reformat_midi(p,verbose=False,write_to_file=True)
+        try:
+            reformat_midi(p,verbose=False,write_to_file=True)
+        except Exception as e:
+            print("Unable to reformat {}. Deleting it".format(p))
+            os.remove(p)
+
+
 
 
 

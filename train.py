@@ -128,8 +128,8 @@ def main():
 
     model,epoch = get_model(args)
     utils.log("Loaded model on epoch={}".format(epoch))
-    if args.verbose:
-        print(model.summary())
+
+    print(model.summary())
 
     utils.save_model(model, experiment_dir)
     utils.log('Saved model to {}'.format(os.path.join(experiment_dir, 'model.json')))
