@@ -82,8 +82,9 @@ def get_midi_data(midi_paths,max_num_dfs = 100):
     dfs = [] * num_dfs
     for i in range(num_dfs):
         midi_file = midi_paths[i]
+
         df = get_midi_as_pandas(midi_file,reformat=False)
-        dfs[i] = df
+        dfs.append(df)
     return dfs;
     
 # lazily load the midi data

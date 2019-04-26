@@ -120,6 +120,7 @@ def main():
     utils.log("Created experiment directory {}".format(experiment_dir))
 
     val_split_index = len(midi_files) - int(len(midi_files) * VALIDATION_SPLIT_RATE)
+
     utils.log("Loading midi files from {}".format(data_dir))
     train_data = utils.get_midi_data(midi_files[0:val_split_index])
     val_data = utils.get_midi_data(midi_files[val_split_index:])
