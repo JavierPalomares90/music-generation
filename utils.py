@@ -3,6 +3,10 @@ import os, argparse, time
 from multiprocessing import Pool as ThreadPool
 import pandas as pd
 from pymidifile import *
+import numpy as np
+
+NUM_NOTES = 128
+NUM_VELOCITIES = 128
 
 def log(msg,verbose = 1):
     if verbose:
@@ -11,36 +15,36 @@ def log(msg,verbose = 1):
 def parse_args():
     parser = argparse.ArgumentParser(
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--data_dir', type=str, default='data/midi',
+    parser.add_argument('-d','--data_dir', type=str, default='data/midi',
                         help='data directory containing .mid files to use for' \
                              'training')
-    parser.add_argument('--experiment_dir', type=str,
+    parser.add_argument('-e','--experiment_dir', type=str,
                         default='experiments/default',
                         help='directory to store checkpointed models and tensorboard logs.' \
                              'if omitted, will create a new numbered folder in experiments/.')
-    parser.add_argument('--rnn_size', type=int, default=64,
+    parser.add_argument('-r','--rnn_size', type=int, default=64,
                         help='size of RNN hidden state')
-    parser.add_argument('--num_layers', type=int, default=1,
+    parser.add_argument('-n','--num_layers', type=int, default=1,
                         help='number of layers in the RNN')
-    parser.add_argument('--learning_rate', type=float, default=None,
+    parser.add_argument('-l','--learning_rate', type=float, default=None,
                         help='learning rate. If not specified, the recommended learning '\
                         'rate for the chosen optimizer is used.')
-    parser.add_argument('--window_size', type=int, default=20,
+    parser.add_argument('-w','--window_size', type=int, default=20,
                         help='Window size for RNN input per step.')
-    parser.add_argument('--batch_size', type=int, default=32,
+    parser.add_argument('-b','--batch_size', type=int, default=32,
                         help='minibatch size')
-    parser.add_argument('--num_epochs', type=int, default=10,
+    parser.add_argument('-N','--num_epochs', type=int, default=10,
                         help='number of epochs before stopping training.')
-    parser.add_argument('--dropout', type=float, default=0.2,
+    parser.add_argument('-D','--dropout', type=float, default=0.2,
                         help='percentage of weights that are turned off every training '\
                         'set step. This is a popular regularization that can help with '\
                         'overfitting. Recommended values are 0.2-0.5')
-    parser.add_argument('--optimizer', 
+    parser.add_argument('-o','--optimizer', 
                         choices=['sgd', 'rmsprop', 'adagrad', 'adadelta', 
                                  'adam', 'adamax', 'nadam'], default='adam',
                         help='The optimization algorithm to use. '\
                         'See https://keras.io/optimizers for a full list of optimizers.')
-    parser.add_argument('--grad_clip', type=float, default=5.0,
+    parser.add_argument('-g','--grad_clip', type=float, default=5.0,
                         help='clip gradients at this value.')
     parser.add_argument('--message', '-m', type=str,
                         help='a note to self about the experiment saved to message.txt '\
@@ -52,10 +56,6 @@ def parse_args():
                         ' A higher value trains faster but uses more RAM. A lower value '\
                         'uses less RAM but takes significantly longer to train.')
     return parser.parse_args()
-
-def get_data(midis):
-    #TODO: Complete impl
-    pass
 
 def load_model_from_checkpoint(model_dir):
     
@@ -83,12 +83,63 @@ def get_midi_data(midi_paths,max_num_dfs = 100):
     for i in range(num_dfs):
         midi_file = midi_paths[i]
 
-        df = get_midi_as_pandas(midi_file,reformat=False)
+        df = get_midi_as_pandas(midi_file)
         dfs.append(df)
     return dfs;
-    
+
+def _parse_msg(msg, on_notes = None):
+    # keep track of which notes have been on in the past
+    if(on_notes == None):
+        on_notes = [0] * NUM_NOTES
+    velocities = [0] * NUM_VELOCITIES
+    on_notes.extend(velocities)
+    msg_type = msg.type
+    if msg_type == 'note_on' or msg_type == 'note_off':
+        velocity = msg.velocity
+        note = msg.note
+        if(msg_type == 'note_on'):
+            val = 1
+        elif msg_type == 'note_off':
+            val = 0
+        on_notes[note] = val
+        on_notes[NUM_NOTES + velocity] = 1
+    return on_notes
+
+def _get_windows_from_midi(midi,window_size):
+    num_msgs = len(midi.tracks[0])
+    parsed_msgs = [] * num_msgs
+    prev_notes = None
+    for msg in midi.tracks[0]:
+        if(msg.is_meta == True):
+            continue
+        msg_type = msg.type
+        if msg_type != 'note_on' and msg_type != 'note_off':
+            continue
+        parsed_msg = _parse_msg(msg,prev_notes)
+        if(parsed_msg != None):
+            prev_notes = parsed_msg[0:NUM_NOTES]
+            parsed_msgs.append(parsed_msg)
+    num_notes = len(parsed_msgs)
+    windows = []
+    for i in range(0,num_notes - window_size - 1):
+        x = parsed_msgs[i:i+window_size]
+        y = parsed_msgs[i+window_size + 1]
+        windows.append( (x,y) ) 
+    return windows
+
+
+def _get_windows_from_midis(midis,window_size):
+    X, y = [],[]
+    for midi in midis:
+        if midi is not None:
+            windows = _get_windows_from_midi(midi,window_size)
+            for w in windows:
+                X.append(w[0])
+                y.append(w[1])
+    return (np.asarray(X), np.asarray(y))
+
 # lazily load the midi data
-def get_midi_data_lazily(midi_paths, window_size=20, batch_size=32, num_threads=8,max_files_in_ram=170):
+def get_midi_data_generator(midi_paths, window_size=20, batch_size=32, num_threads=8,max_files_in_ram=170):
     if num_threads > 1:
         pool = ThreadPool(num_threads)
 
@@ -96,17 +147,18 @@ def get_midi_data_lazily(midi_paths, window_size=20, batch_size=32, num_threads=
 
     while True:
         load_files = midi_paths[load_index:load_index + max_files_in_ram]
+        load_index = (load_index + max_files_in_ram) % len(midi_paths)
 
         # print('loading large batch: {}'.format(max_files_in_ram))
         # print('Parsing midi files...')
         # start_time = time.time()
         if num_threads > 1:
-       		midi_pandas = pool.map(get_midi_as_pandas, load_files)
+       		midi_pandas = pool.map(get_midi, load_files)
        	else:
-       		midi_pandas = map(get_midi_as_pandas, load_files)
+       		midi_pandas = map(get_midi, load_files)
         # print('Finished in {:.2f} seconds'.format(time.time() - start_time))
         # print('parsed, now extracting data')
-        data = get_data(midi_pandas)
+        data = _get_windows_from_midis(midi_pandas,window_size)
         batch_index = 0
         while batch_index + batch_size < len(data[0]):
             # print('getting data...')
@@ -118,16 +170,16 @@ def get_midi_data_lazily(midi_paths, window_size=20, batch_size=32, num_threads=
             batch_index = batch_index + batch_size
         
         # probably unneeded but why not
-        del parsed # free the mem
+        del midi_pandas # free the mem
         del data # free the mem
 
 
-def get_midi_as_pandas(midi_file,reformat = False):
-    if reformat:
-        midi_file = reformat_midi(midi_file)
+def get_midi_as_pandas(midi_file):
     midi_pandas = pymidifile.mid_to_matrix(midi_file,output='pandas')
     return midi_pandas
-    
+
+def get_midi(midi_file):
+    return pymidifile.parse_mid(midi_file)
 
 def get_midi_paths(dir):
     # Find all the midi files in the directory

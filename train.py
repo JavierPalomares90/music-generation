@@ -3,6 +3,7 @@ import utils
 import os, argparse, time
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
+from keras.layers import Dense, Activation, Dropout
 from keras.layers import LSTM
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TensorBoard
 from keras.optimizers import SGD, RMSprop, Adagrad, Adadelta, Adam, Adamax, Nadam
@@ -122,9 +123,11 @@ def main():
     val_split_index = len(midi_files) - int(len(midi_files) * VALIDATION_SPLIT_RATE)
 
     utils.log("Loading midi files from {}".format(data_dir))
-    train_data = utils.get_midi_data(midi_files[0:val_split_index])
-    val_data = utils.get_midi_data(midi_files[val_split_index:])
-    utils.log("Split training and validation data")
+    utils.log("getting data generators")
+    train_data_generator = utils.get_midi_data_generator(midi_files[0:val_split_index],num_threads=1)
+    val_data_generator = utils.get_midi_data_generator(midi_files[val_split_index:],num_threads=1)
+
+    next(train_data_generator)
 
     model,epoch = get_model(args)
     utils.log("Loaded model on epoch={}".format(epoch))
