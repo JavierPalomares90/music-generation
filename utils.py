@@ -281,7 +281,7 @@ def _get_midi_from_model_output(encoded_notes):
         track.append(msg)
     return midi;
 
-def _get_notes_from_pred(sshape,pred_probs):
+def _get_notes_from_pred(pred_probs):
     num_notes = len(pred_probs)
     notes = np.random.binomial(num_notes,p=pred_probs)
     return notes
@@ -302,13 +302,12 @@ def _gen(model, seed,window_size,length,threshold):
         # TODO: This is only taking one note per sequence. Need to fix it
         
         # prob distrobuition sampling
-        index = np.random.choice(range(0, seed.shape[1]), p=pred_probs)
         pred = np.zeros(seed.shape[1])
 
         pred[index] = 1
         generated.append(notes)
         buf.pop(0)
-        buff.append(notes)
+        buf.append(notes)
     return generated
 
 def generate(model, seeds, window_size, length, num_to_gen,threshold):
