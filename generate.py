@@ -22,7 +22,7 @@ def main():
             exit(1)
 
     if prime_file:
-        midi_files = prime_file
+        midi_files = [prime_file]
     else:
         midi_files = utils.get_midi_paths(data_dir)
     
