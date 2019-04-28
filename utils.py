@@ -4,6 +4,7 @@ from multiprocessing import Pool as ThreadPool
 import pandas as pd
 from pymidifile import *
 import numpy as np
+from mido import MidiFile, MidiTrack, Message, MetaMessage
 
 NUM_NOTES = 128
 NUM_VELOCITIES = 128
@@ -263,10 +264,17 @@ def save_model(model,directory):
     with open(os.path.join(directory, 'model.json'), 'w') as f:
         f.write(model.to_json())
 
-def _get_midi_from_model_output(model_output):
+# Parse the model output to a midos MidiFile
+def _get_midi_from_model_output(windows):
+    # save all message in one track
+    midi = MidiFile(type=0)
+    track = MidiTrack()
     # TODO: Complete impl
 
-    return None
+
+
+
+    return midi;
 
 # generate a midi from a model using a seed
 def _gen(model, seed,window_size,length):
