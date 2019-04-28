@@ -9,6 +9,7 @@ def main():
         # prime file validation
     prime_file = args.prime_file
     data_dir = args.data_dir
+    threshold = args.threshold
     
     experiment_dir = args.experiment_dir
     utils.log('Using {} as --experiment_dir'.format(experiment_dir))
@@ -48,7 +49,7 @@ def main():
     # generate tracks using random seeds
     utils.log('Loading seed files {}'.format(midi_files))
     X, y = next(seed_generator)
-    generated = utils.generate(model, X, window_size, args.file_length, args.num_files)
+    generated = utils.generate(model, X, window_size, args.file_length, args.num_files,threshold)
     for i, midi in enumerate(generated):
         file = os.path.join(args.save_dir, '{}.mid'.format(i + 1))
         midi.save(file)

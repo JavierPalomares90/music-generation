@@ -83,6 +83,8 @@ def parse_generate_args():
     parser.add_argument('-d','--data_dir', type=str, default='data/midi',
                         help='data directory containing .mid files to use for' \
                              'seeding/priming. Required if --prime_file is not specified')
+    parser.add_argument('-t','--threshold', type=float, default=.7,
+                        help='Threshold for turning notes on. Notes with sigmoid value higher than this will be activated')
     return parser.parse_args()
 
 
@@ -279,35 +281,42 @@ def _get_midi_from_model_output(encoded_notes):
         track.append(msg)
     return midi;
 
+def _get_notes_from_pred(sshape,pred_probs):
+    num_notes = len(pred_probs)
+    notes = np.random.binomial(num_notes,p=pred_probs)
+    return notes
+
 # generate note encodings from a model using a seed
-def _gen(model, seed,window_size,length):
+def _gen(model, seed,window_size,length,threshold):
     generated  = []
     # ring buffer
     buf = np.copy(seed).tolist()
     while len(generated) < length:
         arr = np.expand_dims(np.asarray(buf), 0)
         pred = model.predict(arr)
+        pred_probs = pred[0]
         
+        notes = _get_notes_from_pred(pred_probs)
         # argmax sampling (NOT RECOMMENDED), or...
         # index = np.argmax(pred)
         # TODO: This is only taking one note per sequence. Need to fix it
         
         # prob distrobuition sampling
-        index = np.random.choice(range(0, seed.shape[1]), p=pred[0])
+        index = np.random.choice(range(0, seed.shape[1]), p=pred_probs)
         pred = np.zeros(seed.shape[1])
 
         pred[index] = 1
-        generated.append(pred)
+        generated.append(notes)
         buf.pop(0)
-        buf.append(pred)
+        buff.append(notes)
     return generated
 
-def generate(model, seeds, window_size, length, num_to_gen):
+def generate(model, seeds, window_size, length, num_to_gen,threshold):
     midis = []
     for i in range(num_to_gen):
         # get a random seed
         seed = seeds[random.randint(0,len(seeds) - 1)]
-        generated = _gen(model,seed,window_size,length)
+        generated = _gen(model,seed,window_size,length,threshold)
         midi = _get_midi_from_model_output(generated)
         midis.append(midi)
     return midis
