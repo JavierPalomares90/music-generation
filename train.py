@@ -42,7 +42,7 @@ def get_model(args,experiment_dir=None):
                     model.add(LSTM(**kwargs))
         model.add(Dropout(args.dropout))
         model.add(Dense(OUTPUT_SIZE))
-        model.add(Activation('softmax'))
+        model.add(Activation('sigmoid'))
     else:
         model, epoch = utils.load_model_from_checkpoint(experiment_dir)
     # these cli args aren't specified if get_model() is being

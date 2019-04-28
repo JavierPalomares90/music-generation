@@ -8,7 +8,8 @@ from mido import MidiFile, MidiTrack, Message, MetaMessage
 from keras.models import model_from_json
 
 NUM_NOTES = 128
-NUM_VELOCITIES = 128
+#NUM_VELOCITIES = 128
+NUM_VELOCITIES = 0
 
 def log(msg,verbose = 1):
     if verbose:
@@ -119,8 +120,8 @@ def _parse_msg(msg, on_notes = None):
     # keep track of which notes have been on in the past
     if(on_notes == None):
         on_notes = [0] * NUM_NOTES
-    velocities = [0] * NUM_VELOCITIES
-    on_notes.extend(velocities)
+    #velocities = [0] * NUM_VELOCITIES
+    #on_notes.extend(velocities)
     msg_type = msg.type
     if msg_type == 'note_on' or msg_type == 'note_off':
         velocity = msg.velocity
@@ -130,7 +131,7 @@ def _parse_msg(msg, on_notes = None):
         elif msg_type == 'note_off':
             val = 0
         on_notes[note] = val
-        on_notes[NUM_NOTES + velocity] = 1
+        #on_notes[NUM_NOTES + velocity] = 1
     return on_notes
 
 def _get_windows_from_midi(midi,window_size):
@@ -310,5 +311,3 @@ def generate(model, seeds, window_size, length, num_to_gen):
         midi = _get_midi_from_model_output(generated)
         midis.append(midi)
     return midis
-        
-
