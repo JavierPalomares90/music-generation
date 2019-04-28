@@ -283,6 +283,7 @@ def _get_midi_from_model_output(seed, generated):
     # save all message in one track
     midi = MidiFile(type=0)
     track = MidiTrack()
+    midi.tracks.append(track)
     prev_notes = None
     for arr in seed:
         # the notes are encoded as indicators for 
@@ -307,7 +308,7 @@ def _get_midi_from_model_output(seed, generated):
         notes_on = _get_notes_on(prev_notes,notes)
         notes_off = _get_notes_off(prev_notes,notes)
         for note in notes_on:
-            msg = Message('note_on',note=note,velocity = DEFAULT_VELOCITY )
+            msg = Message('note_on',note=note,velocity = DEFAULT_VELOCITY)
             track.append(msg)
         for note in notes_off:
             msg = Message('note_off',note=note,velocity = DEFAULT_VELOCITY)
@@ -340,6 +341,7 @@ def _gen(model, seed,window_size,length,threshold):
 def generate(model, seeds, window_size, length, num_to_gen,threshold):
     midis = []
     for i in range(num_to_gen):
+        log("generating midi {} of {}".format(i,num_to_gen))
         # get a random seed
         seed = seeds[random.randint(0,len(seeds) - 1)]
         generated = _gen(model,seed,window_size,length,threshold)
