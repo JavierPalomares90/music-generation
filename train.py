@@ -150,7 +150,7 @@ def main():
                         verbose=1, 
                         callbacks=callbacks,
                         initial_epoch=epoch)
-    utils.log('Finished in {:.2f} seconds'.format(time.time() - start_time), args.verbose)
+    utils.log('Finished in {:.2f} seconds'.format(time.time() - start_time))
 
 
 
