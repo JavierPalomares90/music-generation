@@ -16,9 +16,10 @@ def main():
     if prime_file and not os.path.exists(prime_file):
         utils.log('Error: prime file {} does not exist. Exiting.'.format(prime_file))
         exit(1)
-    elif not os.path.isdir(data_dir):
-        utils.log('Error: data dir {} does not exist. Exiting.'.format(data_dir))
-        exit(1)
+    else:
+        if not os.path.isdir(data_dir):
+            utils.log('Error: data dir {} does not exist. Exiting.'.format(data_dir))
+            exit(1)
 
     if prime_file:
         midi_files = prime_file
