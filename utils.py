@@ -270,8 +270,8 @@ def _get_midi_from_model_output(encoded_notes):
     for arr in encoded_notes:
         # the notes are encoded as indicators for 
         # 128 notes, followed by indicators for 128 velocities
-        notes = encoded_notes[0:NUM_NOTES]
-        velocities = encoded_notes[NUM_NOTES:]
+        notes = arr[0:NUM_NOTES]
+        velocities = arr[NUM_NOTES:]
         note_ind = np.nonzero(notes)[0]
         velocity_ind = np.nonzero(velocities)[0]
         msg = Message('note_on',note=note_ind,velocity = velocity_ind)
