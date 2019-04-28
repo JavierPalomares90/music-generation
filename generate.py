@@ -11,7 +11,7 @@ def main():
     data_dir = args.data_dir
     
     experiment_dir = args.experiment_dir
-    utils.log('Using {} as --experiment_dir'.format(experiment_dir), args.verbose)
+    utils.log('Using {} as --experiment_dir'.format(experiment_dir))
 
     if prime_file and not os.path.exists(prime_file):
         utils.log('Error: prime file {} does not exist. Exiting.'.format(prime_file))
