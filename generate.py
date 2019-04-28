@@ -51,7 +51,7 @@ def main():
     X, y = next(seed_generator)
     generated = utils.generate(model, X, window_size, args.file_length, args.num_files,threshold)
     for i, midi in enumerate(generated):
-        file = os.path.join(args.save_dir, '{}.mid'.format(i + 1))
+        file = os.path.join(save_dir, '{}.mid'.format(i + 1))
         midi.save(file)
         utils.log('wrote midi file to {}'.format(file))
 
