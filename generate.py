@@ -51,8 +51,8 @@ def main():
     generated = utils.generate(model, X, window_size, args.file_length, args.num_files)
     for i, midi in enumerate(generated):
         file = os.path.join(args.save_dir, '{}.mid'.format(i + 1))
-        midi.write(file.format(i + 1))
-        utils.log('wrote midi file to {}'.format(file), True)
+        midi.save(file)
+        utils.log('wrote midi file to {}'.format(file))
 
 if __name__ == '__main__':
     main()

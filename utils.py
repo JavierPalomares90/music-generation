@@ -261,19 +261,24 @@ def save_model(model,directory):
     with open(os.path.join(directory, 'model.json'), 'w') as f:
         f.write(model.to_json())
 
-# Parse the model output to a midos MidiFile
-def _get_midi_from_model_output(windows):
+# Parse the encoded notes to a midos MidiFile
+def _get_midi_from_model_output(encoded_notes):
     # save all message in one track
     midi = MidiFile(type=0)
     track = MidiTrack()
     # TODO: Complete impl
-
-
-
-
+    for arr in encoded_notes:
+        # the notes are encoded as indicators for 
+        # 128 notes, followed by indicators for 128 velocities
+        notes = encoded_notes[0:NUM_NOTES]
+        velocities = encoded_notes[NUM_NOTES:]
+        note_ind = np.nonzero(notes)[0]
+        velocity_ind = np.nonzero(velocities)[0]
+        msg = Message('note_on',note=note_ind,velocity = velocity_ind)
+        track.append(msg)
     return midi;
 
-# generate a midi from a model using a seed
+# generate note encodings from a model using a seed
 def _gen(model, seed,window_size,length):
     generated  = []
     # ring buffer
@@ -284,6 +289,7 @@ def _gen(model, seed,window_size,length):
         
         # argmax sampling (NOT RECOMMENDED), or...
         # index = np.argmax(pred)
+        # TODO: This is only taking one note per sequence. Need to fix it
         
         # prob distrobuition sampling
         index = np.random.choice(range(0, seed.shape[1]), p=pred[0])
