@@ -16,7 +16,7 @@ def main():
     if prime_file and not os.path.exists(prime_file):
         utils.log('Error: prime file {} does not exist. Exiting.'.format(prime_file))
         exit(1)
-    else:
+    elif not prime_file:
         if not os.path.isdir(data_dir):
             utils.log('Error: data dir {} does not exist. Exiting.'.format(data_dir))
             exit(1)
