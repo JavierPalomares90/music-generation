@@ -304,7 +304,7 @@ def _get_midi_from_model_output(seed, generated):
         for note in notes_on:
             msg = Message('note_on',note=note,velocity = DEFAULT_VELOCITY )
             track.append(msg)
-        for not in notes_off:
+        for note in notes_off:
             msg = Message('note_off',note=note,velocity = DEFAULT_VELOCITY)
             track.append(msg)
         prev_notes = notes
