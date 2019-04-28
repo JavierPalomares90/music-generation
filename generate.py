@@ -32,7 +32,7 @@ def main():
     
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
-        utis.log("Created save dir {}".format(save_dir))
+        utils.log("Created save dir {}".format(save_dir))
 
     utils.log("Saving generated_midis to {}".format(save_dir))
     model, epoch = train.get_model(args, experiment_dir=experiment_dir)
