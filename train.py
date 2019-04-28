@@ -142,10 +142,10 @@ def main():
     num_windows = 827
     #average number of length-20 windows
     start_time = time.time()
-    model.fit_generator(train_data,
+    model.fit_generator(train_data_generator,
                         steps_per_epoch=len(midi_files) * num_windows / args.batch_size, 
                         epochs=args.num_epochs,
-                        validation_data=val_data,
+                        validation_data=val_data_generator,
                         validation_steps=len(midi_files) * VALIDATION_SPLIT_RATE * num_windows/ args.batch_size,
                         verbose=1, 
                         callbacks=callbacks,
