@@ -10,6 +10,7 @@ from keras.models import model_from_json
 NUM_NOTES = 128
 #NUM_VELOCITIES = 128
 NUM_VELOCITIES = 0
+DEFAULT_VELOCITY = 64
 
 def log(msg,verbose = 1):
     if verbose:
@@ -264,21 +265,49 @@ def save_model(model,directory):
     with open(os.path.join(directory, 'model.json'), 'w') as f:
         f.write(model.to_json())
 
+def _get_notes_on(prev_notes,notes):
+    new_notes = np.subtract(notes,prev_notes)
+    return np.nonzero(new_notes)[0]
+
+def _get_notes_off(prev_notes,notes):
+    old_notes = np.subtract(prev_notes,notes)
+    return np.nonzero(old_notes)[0]
+
 # Parse the encoded notes to a midos MidiFile
-def _get_midi_from_model_output(encoded_notes):
+def _get_midi_from_model_output(seed, generated):
     # save all message in one track
     midi = MidiFile(type=0)
     track = MidiTrack()
-    # TODO: Complete impl
+    prev_notes = None
+    for arr in seed:
+        # the notes are encoded as indicators for 
+        # 128 notes, followed by indicators for 128 velocities
+        notes = arr[0:NUM_NOTES]
+        #velocities = arr[NUM_NOTES:]
+        notes_on = _get_notes_on(prev_notes,notes)
+        notes_off = _get_notes_off(prev_notes,notes)
+        for note in notes_on:
+            msg = Message('note_on',note=note,velocity = DEFAULT_VELOCITY )
+            track.append(msg)
+        for not in notes_off:
+            msg = Message('note_off',note=note,velocity = DEFAULT_VELOCITY)
+            track.append(msg)
+        prev_notes = notes
+
     for arr in encoded_notes:
         # the notes are encoded as indicators for 
         # 128 notes, followed by indicators for 128 velocities
         notes = arr[0:NUM_NOTES]
-        velocities = arr[NUM_NOTES:]
-        note_ind = np.nonzero(notes)[0]
-        velocity_ind = np.nonzero(velocities)[0]
-        msg = Message('note_on',note=note_ind,velocity = velocity_ind)
-        track.append(msg)
+        #velocities = arr[NUM_NOTES:]
+        notes_on = _get_notes_on(prev_notes,notes)
+        notes_off = _get_notes_off(prev_notes,notes)
+        for note in notes_on:
+            msg = Message('note_on',note=note,velocity = DEFAULT_VELOCITY )
+            track.append(msg)
+        for not in notes_off:
+            msg = Message('note_off',note=note,velocity = DEFAULT_VELOCITY)
+            track.append(msg)
+        prev_notes = notes
     return midi;
 
 def _get_notes_from_pred(pred_probs):
@@ -296,14 +325,8 @@ def _gen(model, seed,window_size,length,threshold):
         pred = model.predict(arr)
         pred_probs = pred[0]
         
+        # get the notes by from bernoulli samples
         notes = _get_notes_from_pred(pred_probs)
-        # argmax sampling (NOT RECOMMENDED), or...
-        # index = np.argmax(pred)
-        # TODO: This is only taking one note per sequence. Need to fix it
-        
-        # prob distrobuition sampling
-        pred = np.zeros(seed.shape[1])
-
         generated.append(notes)
         buf.pop(0)
         buf.append(notes)
@@ -315,6 +338,6 @@ def generate(model, seeds, window_size, length, num_to_gen,threshold):
         # get a random seed
         seed = seeds[random.randint(0,len(seeds) - 1)]
         generated = _gen(model,seed,window_size,length,threshold)
-        midi = _get_midi_from_model_output(generated)
+        midi = _get_midi_from_model_output(seed,generated)
         midis.append(midi)
     return midis
