@@ -304,7 +304,6 @@ def _gen(model, seed,window_size,length,threshold):
         # prob distrobuition sampling
         pred = np.zeros(seed.shape[1])
 
-        pred[index] = 1
         generated.append(notes)
         buf.pop(0)
         buf.append(notes)
