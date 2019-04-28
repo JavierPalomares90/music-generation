@@ -274,7 +274,7 @@ def _get_notes_on(prev_notes,notes):
 
 def _get_notes_off(prev_notes,notes):
     if(prev_notes == None):
-        return None
+        return []
     old_notes = np.subtract(prev_notes,notes)
     return np.nonzero(old_notes)[0]
 
