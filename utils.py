@@ -57,6 +57,36 @@ def parse_args():
                         'uses less RAM but takes significantly longer to train.')
     return parser.parse_args()
 
+def parse_generate_args():
+      parser = argparse.ArgumentParser(
+                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--experiment_dir', type=str,
+                        default='experiments/default',
+                        help='directory to load saved model from. ' \
+                             'If omitted, it will use the most recent directory from ' \
+                             'experiments/.')
+    parser.add_argument('--save_dir', type=str,
+    					help='directory to save generated files to. Directory will be ' \
+    					'created if it doesn\'t already exist. If not specified, ' \
+    					'files will be saved to generated/ inside --experiment_dir.')
+    parser.add_argument('--midi_instrument', default='Acoustic Grand Piano',
+                        help='MIDI instrument name (or number) to use for the ' \
+                        'generated files. See https://www.midi.org/specifications/item/'\
+                        'gm-level-1-sound-set for a full list of instrument names.')
+    parser.add_argument('--num_files', type=int, default=10,
+                        help='number of midi files to sample.')
+    parser.add_argument('--file_length', type=int, default=1000,
+    					help='Length of each file, measured in 16th notes.')
+    parser.add_argument('--prime_file', type=str,
+                        help='prime generated files from midi file. If not specified ' \
+                        'random windows from the validation dataset will be used for ' \
+                        'for seeding.')
+    parser.add_argument('--data_dir', type=str, default='data/midi',
+                        help='data directory containing .mid files to use for' \
+                             'seeding/priming. Required if --prime_file is not specified')
+    return parser.parse_args()
+
+
 def load_model_from_checkpoint(model_dir):
     
     '''Loads the best performing model from checkpoint_dir'''
@@ -186,7 +216,7 @@ def get_midi_paths(dir):
     paths = []
     for root,dirs,files in os.walk(dir):
         for file in files:
-            if file.endswith(".mid"):
+            if file.endswith(".mid") or file.endswith(".midi"):
                 paths.append(os.path.join(root,file))
     return paths
 
