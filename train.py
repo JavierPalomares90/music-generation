@@ -11,7 +11,7 @@ from keras.optimizers import SGD, RMSprop, Adagrad, Adadelta, Adam, Adamax, Nada
 # use 20 percent for validation
 VALIDATION_SPLIT_RATE = 0.2
 
-OUTPUT_SIZE = 129 # 0-127 notes + 1 for rests
+OUTPUT_SIZE = 128 # 0-127 notes
 #create or load a saved model
 # returns the model and the epoch number (>1 if loaded from a checkpoint)
 def get_model(args,experiment_dir=None):
@@ -127,7 +127,7 @@ def main():
     train_data_generator = utils.get_midi_data_generator(midi_files[0:val_split_index],num_threads=1)
     val_data_generator = utils.get_midi_data_generator(midi_files[val_split_index:],num_threads=1)
 
-    next(train_data_generator)
+    utils.log("Getting model")
 
     model,epoch = get_model(args)
     utils.log("Loaded model on epoch={}".format(epoch))
