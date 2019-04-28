@@ -5,6 +5,7 @@ import pandas as pd
 from pymidifile import *
 import numpy as np
 from mido import MidiFile, MidiTrack, Message, MetaMessage
+from keras.models import model_from_json
 
 NUM_NOTES = 128
 NUM_VELOCITIES = 128
