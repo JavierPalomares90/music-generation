@@ -266,10 +266,15 @@ def save_model(model,directory):
         f.write(model.to_json())
 
 def _get_notes_on(prev_notes,notes):
-    new_notes = np.subtract(notes,prev_notes)
+    if(prev_notes == None):
+        new_notes = notes;
+    else:
+        new_notes = np.subtract(notes,prev_notes)
     return np.nonzero(new_notes)[0]
 
 def _get_notes_off(prev_notes,notes):
+    if(prev_notes == None):
+        return None
     old_notes = np.subtract(prev_notes,notes)
     return np.nonzero(old_notes)[0]
 
