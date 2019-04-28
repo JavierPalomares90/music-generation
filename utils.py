@@ -58,7 +58,7 @@ def parse_args():
     return parser.parse_args()
 
 def parse_generate_args():
-      parser = argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
                        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--experiment_dir', type=str,
                         default='experiments/default',
@@ -271,7 +271,23 @@ def _get_midi_from_model_output(model_output):
 # generate a midi from a model using a seed
 def _gen(model, seed,window_size,length):
     generated  = []
-    #TODO: Complete impl
+    # ring buffer
+    buf = np.copy(seed).tolist()
+    while len(generated) < length:
+        arr = np.expand_dims(np.asarray(buf), 0)
+        pred = model.predict(arr)
+        
+        # argmax sampling (NOT RECOMMENDED), or...
+        # index = np.argmax(pred)
+        
+        # prob distrobuition sampling
+        index = np.random.choice(range(0, seed.shape[1]), p=pred[0])
+        pred = np.zeros(seed.shape[1])
+
+        pred[index] = 1
+        generated.append(pred)
+        buf.pop(0)
+        buf.append(pred)
     return generated
 
 def generate(model, seeds, window_size, length, num_to_gen):

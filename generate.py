@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# Python script to generate music using a trained tf model
 import argparse, os, pdb
-import pretty_midi
 import train
 import utils
 
@@ -17,10 +15,10 @@ def main():
 
     if prime_file and not os.path.exists(prime_file):
         utils.log('Error: prime file {} does not exist. Exiting.'.format(prime_file))
-        return
+        exit(1)
     elif not os.path.isdir(data_dir):
-        utils.log('Error: data dir {} does not exist. Exiting.'.format(data_dir), 
-        return
+        utils.log('Error: data dir {} does not exist. Exiting.'.format(data_dir))
+        exit(1)
 
     if prime_file:
         midi_files = prime_file
@@ -39,15 +37,15 @@ def main():
     model, epoch = train.get_model(args, experiment_dir=experiment_dir)
     utils.log("Loaded model from {}".format(os.path.join(experiment_dir,"model.json")))
 
-        window_size = model.layers[0].get_input_shape_at(0)[1]
+    window_size = model.layers[0].get_input_shape_at(0)[1]
     seed_generator = utils.get_midi_data_generator(midi_files, 
                                               window_size=window_size,
                                               batch_size=32,
                                               num_threads=1,
-                                              max_files_in_ram=10
+                                              max_files_in_ram=10)
 
     # generate tracks using random seeds
-    utils.log('Loading seed files...', args.verbose)
+    utils.log('Loading seed files {}'.format(midi_files))
     X, y = next(seed_generator)
     generated = utils.generate(model, X, window_size, 
     	                       args.file_length, args.num_files)
