@@ -46,9 +46,15 @@ def main():
                                               num_threads=1,
                                               max_files_in_ram=10
 
-
-
-    
+    # generate tracks using random seeds
+    utils.log('Loading seed files...', args.verbose)
+    X, y = next(seed_generator)
+    generated = utils.generate(model, X, window_size, 
+    	                       args.file_length, args.num_files)
+    for i, midi in enumerate(generated):
+        file = os.path.join(args.save_dir, '{}.mid'.format(i + 1))
+        midi.write(file.format(i + 1))
+        utils.log('wrote midi file to {}'.format(file), True)
 
 if __name__ == '__main__':
     main()

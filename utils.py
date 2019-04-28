@@ -262,3 +262,26 @@ def create_experiment_dir(experiment_dir, verbose=False):
 def save_model(model,directory):
     with open(os.path.join(directory, 'model.json'), 'w') as f:
         f.write(model.to_json())
+
+def _get_midi_from_model_output(model_output):
+    # TODO: Complete impl
+
+    return None
+
+# generate a midi from a model using a seed
+def _gen(model, seed,window_size,length):
+    generated  = []
+    #TODO: Complete impl
+    return generated
+
+def generate(model, seeds, window_size, length, num_to_gen):
+    midis = []
+    for i in range(num_to_gen):
+        # get a random seed
+        seed = seeds[random.randint(len(seeds) - 1)]
+        generated = _gen(model,seed,window_size,length)
+        midi = _get_midi_from_model_output(generated)
+        midis.append(midi)
+    return midis
+        
+
