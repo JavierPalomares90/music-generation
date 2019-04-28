@@ -299,7 +299,7 @@ def _get_midi_from_model_output(seed, generated):
             track.append(msg)
         prev_notes = notes
 
-    for arr in encoded_notes:
+    for arr in generated:
         # the notes are encoded as indicators for 
         # 128 notes, followed by indicators for 128 velocities
         notes = arr[0:NUM_NOTES]
