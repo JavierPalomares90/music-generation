@@ -267,7 +267,7 @@ def save_model(model,directory):
 
 def _get_notes_on(prev_notes,notes):
     if(prev_notes is None):
-        new_notes = notes;
+        new_notes = notes
     else:
         new_notes = np.subtract(notes,prev_notes)
     return np.where(new_notes == 1)[0]
@@ -279,9 +279,9 @@ def _get_notes_off(prev_notes,notes):
     return np.where(old_notes == 1)[0]
 
 # Parse the encoded notes to a midos MidiFile
-def _get_midi_from_model_output(seed, generated):
+def _get_midi_from_model_output(seed, generated,ticks= 96):
     # save all message in one track
-    midi = MidiFile(type=0)
+    midi = MidiFile(type=0, ticks_per_beat=ticks)
     track = MidiTrack()
     midi.tracks.append(track)
     prev_notes = None
@@ -293,10 +293,10 @@ def _get_midi_from_model_output(seed, generated):
         notes_on = _get_notes_on(prev_notes,notes)
         notes_off = _get_notes_off(prev_notes,notes)
         for note in notes_on:
-            msg = Message('note_on',note=note,velocity = DEFAULT_VELOCITY )
+            msg = Message('note_on',note=note,velocity = DEFAULT_VELOCITY, time = 1)
             track.append(msg)
         for note in notes_off:
-            msg = Message('note_off',note=note,velocity = DEFAULT_VELOCITY)
+            msg = Message('note_off',note=note,velocity = DEFAULT_VELOCITY, time = 1)
             track.append(msg)
         prev_notes = notes
 
@@ -308,13 +308,13 @@ def _get_midi_from_model_output(seed, generated):
         notes_on = _get_notes_on(prev_notes,notes)
         notes_off = _get_notes_off(prev_notes,notes)
         for note in notes_on:
-            msg = Message('note_on',note=note,velocity = DEFAULT_VELOCITY)
+            msg = Message('note_on',note=note,velocity = DEFAULT_VELOCITY,time = 1)
             track.append(msg)
         for note in notes_off:
-            msg = Message('note_off',note=note,velocity = DEFAULT_VELOCITY)
+            msg = Message('note_off',note=note,velocity = DEFAULT_VELOCITY, time = 1)
             track.append(msg)
         prev_notes = notes
-    return midi;
+    return midi
 
 def _get_notes_from_pred(pred_probs):
     num_notes = len(pred_probs)
