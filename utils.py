@@ -318,9 +318,9 @@ def _get_midi_from_model_output(seed, generated,ticks= 96):
 
 def _get_notes_from_pred(pred_probs):
     num_notes = len(pred_probs)
-    notes = np.zero(num_notes)
+    notes = np.zeros(num_notes)
     index = np.random.choice(range(0,num_notes), p = pred_probs)
-    pred[index] = 1
+    notes[index] = 1
     return notes
 
 # generate note encodings from a model using a seed
