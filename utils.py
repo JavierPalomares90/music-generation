@@ -234,7 +234,7 @@ def get_midi_as_pandas(midi_file):
     midi_pandas = pymidifile.mid_to_matrix(midi_file,output='pandas')
     return midi_pandas
 
-def get_midi(midi_file):
+def get_midi(path):
     midi = None
     try:
         midi = pretty_midi.PrettyMIDI(path)
