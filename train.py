@@ -34,7 +34,7 @@ def get_model(args,experiment_dir=None):
                 model.add(LSTM(**kwargs))
             else:
                 # if this is a middle layer
-                if not layer_index == args.num_layers - 1:
+                if not layer == args.num_layers - 1:
                     kwargs['return_sequences'] = True
                     model.add(LSTM(**kwargs))
                 else: # this is the last layer
