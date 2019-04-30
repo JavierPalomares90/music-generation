@@ -318,7 +318,9 @@ def _get_midi_from_model_output(seed, generated,ticks= 96):
 
 def _get_notes_from_pred(pred_probs):
     num_notes = len(pred_probs)
-    notes = np.random.binomial(num_notes,p=pred_probs)
+    notes = np.zero(num_notes)
+    index = np.random.choice(range(0,num_notes), p = pred_probs)
+    pred[index] = 1
     return notes
 
 # generate note encodings from a model using a seed
@@ -331,7 +333,7 @@ def _gen(model, seed,window_size,length,threshold):
         pred = model.predict(arr)
         pred_probs = pred[0]
         
-        # get the notes by from bernoulli samples
+        # get the notes from the network output
         notes = _get_notes_from_pred(pred_probs)
         generated.append(notes)
         buf.pop(0)
