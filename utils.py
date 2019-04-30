@@ -6,11 +6,14 @@ from pymidifile import *
 import numpy as np
 from mido import MidiFile, MidiTrack, Message, MetaMessage
 from keras.models import model_from_json
+from pretty_midi import *
 
-NUM_NOTES = 128
+#NUM_NOTES = 128
+NUM_NOTES = 129
 #NUM_VELOCITIES = 128
 NUM_VELOCITIES = 0
 DEFAULT_VELOCITY = 64
+REST_NOTE = 128
 
 def log(msg,verbose = 1):
     if verbose:
@@ -137,28 +140,6 @@ def _parse_msg(msg, on_notes = None):
         #on_notes[NUM_NOTES + velocity] = 1
     return on_notes
 
-def _get_windows_from_midi(midi,window_size):
-    num_msgs = len(midi.tracks[0])
-    parsed_msgs = [] * num_msgs
-    prev_notes = None
-    for msg in midi.tracks[0]:
-        if(msg.is_meta == True):
-            continue
-        msg_type = msg.type
-        if msg_type != 'note_on' and msg_type != 'note_off':
-            continue
-        parsed_msg = _parse_msg(msg,prev_notes)
-        if(parsed_msg != None):
-            prev_notes = parsed_msg[0:NUM_NOTES]
-            parsed_msgs.append(parsed_msg)
-    num_notes = len(parsed_msgs)
-    windows = []
-    for i in range(0,num_notes - window_size - 1):
-        x = parsed_msgs[i:i+window_size]
-        y = parsed_msgs[i+window_size + 1]
-        windows.append( (x,y) ) 
-    return windows
-
 
 def _get_windows_from_midis(midis,window_size):
     X, y = [],[]
@@ -169,6 +150,49 @@ def _get_windows_from_midis(midis,window_size):
                 X.append(w[0])
                 y.append(w[1])
     return (np.asarray(X), np.asarray(y))
+
+
+def _get_windows_from_midi(midi,window_size):
+    pmidi = pretty_midi.PrettyMIDI(midi)
+    pmidi.remove_invalid_notes()
+    windows = []
+    for instrument in pmidi.instruments:
+        if len(instrument.notes) > window_size:
+            windows = _encode_sliding_windows(instrument, window_size)
+    return windows
+
+
+# one-hot encode a sliding window of notes from a pretty midi instrument.
+# This approach uses the piano roll method, where each step in the sliding
+# window represents a constant unit of time (fs=4, or 1 sec / 4 = 250ms).
+# This allows us to encode rests.
+# pm_instrument can be polyphonic.
+def _encode_sliding_windows(pm_instrument, window_size):
+    roll = np.copy(pm_instrument.get_piano_roll(fs=4).T)
+
+    # trim beginning silence
+    summed = np.sum(roll, axis=1)
+    mask = (summed > 0).astype(float)
+    roll = roll[np.argmax(mask):]
+
+    # transform note velocities into 1s
+    roll = (roll > 0).astype(float)
+
+    # calculate the percentage of the events that are rests
+    # s = np.sum(roll, axis=1)
+    # num_silence = len(np.where(s == 0)[0])
+    # print('{}/{} {:.2f} events are rests'.format(num_silence, len(roll), float(num_silence)/float(len(roll))))
+
+    # append a feature: 1 to rests and 0 to notes
+    rests = np.sum(roll, axis=1)
+    rests = (rests != 1).astype(float)
+    roll = np.insert(roll, 0, rests, axis=1)
+
+    windows = []
+    for i in range(0, roll.shape[0] - window_size - 1):
+        windows.append((roll[i:i + window_size], roll[i + window_size + 1]))
+    return windows
+
 
 # lazily load the midi data
 def get_midi_data_generator(midi_paths, window_size=20, batch_size=32, num_threads=8,max_files_in_ram=170):
@@ -316,6 +340,52 @@ def _get_midi_from_model_output(seed, generated):
         prev_notes = notes
     return midi;
 
+
+# Parse the encoded notes to a midos MidiFile
+def _get_pretty_midi_from_model_output(generated_notes,
+                                       instrument_name='Acoustic Grand Piano',
+                                       allow_represses=False):
+    # Create a PrettyMIDI object
+    midi = pretty_midi.PrettyMIDI()
+    # Create an Instrument instance for a cello instrument
+    instrument_program = pretty_midi.instrument_name_to_program(instrument_name)
+    instrument_track = pretty_midi.Instrument(program=instrument_program)
+
+    cur_note = None  # an invalid note to start with
+    cur_note_start = None
+    clock = 0
+
+    # Iterate over note names, which will be converted to note number later
+    for note_num in generated_notes:
+
+        # a note has changed
+        if allow_represses or note_num != cur_note:
+
+            # if a note has been played before and it wasn't a rest
+            if cur_note is not None and cur_note >= 0 and cur_note is not REST_NOTE:
+                # add the last note, now that we have its end time
+                vel = 127 #Highest note striking velocity
+                if (cur_note is REST_NOTE) # If rest is predicted, set zero pitch & velocity midi note
+                    vel = 0
+                    cur_note = 0
+                note = pretty_midi.Note(velocity=vel,
+                                        pitch=int(cur_note),
+                                        start=cur_note_start,
+                                        end=clock)
+                instrument_track.notes.append(note)
+
+            # update the current note
+            cur_note = note_num
+            cur_note_start = clock
+
+        # update the clock
+        clock = clock + 1.0 / 4
+
+    # Add the instrument to the PrettyMIDI object
+    midi.instruments.append(instrument_track)
+    return midi
+
+
 def _get_notes_from_pred(pred_probs):
     num_notes = len(pred_probs)
     notes = np.random.binomial(num_notes,p=pred_probs)
@@ -345,6 +415,7 @@ def generate(model, seeds, window_size, length, num_to_gen,threshold):
         # get a random seed
         seed = seeds[random.randint(0,len(seeds) - 1)]
         generated = _gen(model,seed,window_size,length,threshold)
-        midi = _get_midi_from_model_output(seed,generated)
+        #midi = _get_midi_from_model_output(seed,generated)
+        midi = _get_pretty_midi_from_model_output(generated)
         midis.append(midi)
     return midis
