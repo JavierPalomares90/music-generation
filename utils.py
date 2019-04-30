@@ -235,7 +235,13 @@ def get_midi_as_pandas(midi_file):
     return midi_pandas
 
 def get_midi(midi_file):
-    return pymidifile.parse_mid(midi_file)
+    midi = None
+    try:
+        midi = pretty_midi.PrettyMIDI(path)
+        midi.remove_invalid_notes()
+    except Exception as e:
+        raise Exception(("%s\nerror readying midi file %s" % (e, path)))
+    return midi
 
 def get_midi_paths(dir):
     # Find all the midi files in the directory
