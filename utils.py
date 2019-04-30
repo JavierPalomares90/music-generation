@@ -365,7 +365,7 @@ def _get_pretty_midi_from_model_output(generated_notes,
             if cur_note is not None and cur_note >= 0 and cur_note is not REST_NOTE:
                 # add the last note, now that we have its end time
                 vel = 127 #Highest note striking velocity
-                if (cur_note is REST_NOTE) # If rest is predicted, set zero pitch & velocity midi note
+                if (cur_note is REST_NOTE): # If rest is predicted, set zero pitch & velocity midi note
                     vel = 0
                     cur_note = 0
                 note = pretty_midi.Note(velocity=vel,
@@ -388,7 +388,9 @@ def _get_pretty_midi_from_model_output(generated_notes,
 
 def _get_notes_from_pred(pred_probs):
     num_notes = len(pred_probs)
-    notes = np.random.binomial(num_notes,p=pred_probs)
+    index = np.random.choice(range(0,num_notes), p = pred_probs)
+    notes = np.zeros(num_notes)
+    notes[index] = 1
     return notes
 
 # generate note encodings from a model using a seed
@@ -407,6 +409,8 @@ def _gen(model, seed,window_size,length,threshold):
         buf.pop(0)
         buf.append(notes)
     return generated
+    
+    
 
 def generate(model, seeds, window_size, length, num_to_gen,threshold):
     midis = []
