@@ -385,11 +385,10 @@ def _get_pretty_midi_from_model_output(generated_notes,
     return midi
 
 
-def _get_notes_from_pred(pred_probs):
-    num_notes = len(pred_probs)
-    index = np.random.choice(range(0,num_notes), p = pred_probs)
-    notes = np.zeros(num_notes)
-    notes[index] = 1
+def _get_notes_from_pred(pred):
+    notes = pred
+    # the input is a regression on the velocities.
+    # return what was passed in
     return notes
 
 # generate note encodings from a model using a seed
@@ -400,10 +399,9 @@ def _gen(model, seed,window_size,length,threshold):
     while len(generated) < length:
         arr = np.expand_dims(np.asarray(buf), 0)
         pred = model.predict(arr)
-        pred_probs = pred[0]
+        pred_velocities = pred[0]
         
-        # get the notes by from bernoulli samples
-        notes = _get_notes_from_pred(pred_probs)
+        notes = _get_notes_from_pred(pred_velocities)
         generated.append(notes)
         buf.pop(0)
         buf.append(notes)
