@@ -353,39 +353,42 @@ def _get_pretty_midi_from_model_output(generated_notes,
                                        allow_represses=False):
     # Create a PrettyMIDI object
     midi = pretty_midi.PrettyMIDI()
-    # Create an Instrument instance for a cello instrument
-    instrument_program = pretty_midi.instrument_name_to_program(instrument_name)
-    instrument_track = pretty_midi.Instrument(program=instrument_program)
+    # Create an Instrument instance for a piano
+    instrument_program = midi.instrument_name_to_program(instrument_name)
+    instrument_track = midi.Instrument(program=instrument_program)
 
     cur_note = None  # an invalid note to start with
     cur_note_start = None
     clock = 0
 
-    # Iterate over note names, which will be converted to note number later
-    for note_num in generated_notes:
+    for note in generated_notes:
+        note_num = np.argmax(w) - 1
 
-        # a note has changed
-        if allow_represses or note_num != cur_note:
+        # Iterate over note names, which will be converted to note number later
+        for note_num in generated_notes:
 
-            # if a note has been played before and it wasn't a rest
-            if cur_note is not None and cur_note >= 0 and cur_note is not REST_NOTE:
-                # add the last note, now that we have its end time
-                vel = 127 #Highest note striking velocity
-                if (cur_note is REST_NOTE): # If rest is predicted, set zero pitch & velocity midi note
-                    vel = 0
-                    cur_note = 0
-                note = pretty_midi.Note(velocity=vel,
-                                        pitch=int(cur_note),
-                                        start=cur_note_start,
-                                        end=clock)
-                instrument_track.notes.append(note)
+            # a note has changed
+            if allow_represses or note_num != cur_note:
 
-            # update the current note
-            cur_note = note_num
-            cur_note_start = clock
+                # if a note has been played before and it wasn't a rest
+                if cur_note is not None and cur_note >= 0 and cur_note is not REST_NOTE:
+                    # add the last note, now that we have its end time
+                    vel = 127 #Highest note striking velocity
+                    if (cur_note is REST_NOTE): # If rest is predicted, set zero pitch & velocity midi note
+                        vel = 0
+                        cur_note = 0
+                    note = pretty_midi.Note(velocity=vel,
+                                            pitch=int(cur_note),
+                                            start=cur_note_start,
+                                            end=clock)
+                    instrument_track.notes.append(note)
 
-        # update the clock
-        clock = clock + 1.0 / 4
+                # update the current note
+                cur_note = note_num
+                cur_note_start = clock
+
+            # update the clock
+            clock = clock + 1.0 / 4
 
     # Add the instrument to the PrettyMIDI object
     midi.instruments.append(instrument_track)
@@ -425,7 +428,6 @@ def generate(model, seeds, window_size, length, num_to_gen,threshold):
         # get a random seed
         seed = seeds[random.randint(0,len(seeds) - 1)]
         generated = _gen(model,seed,window_size,length,threshold)
-        #midi = _get_midi_from_model_output(seed,generated)
         midi = _get_pretty_midi_from_model_output(generated)
         midis.append(midi)
     return midis
