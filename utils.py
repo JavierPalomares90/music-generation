@@ -153,7 +153,7 @@ def _get_windows_from_midis(midis,window_size):
 
 
 def _get_windows_from_midi(midi,window_size):
-    pmidi = pretty_midi.PrettyMIDI(midi)
+    pmidi = midi
     pmidi.remove_invalid_notes()
     windows = []
     for instrument in pmidi.instruments:
