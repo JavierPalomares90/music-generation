@@ -53,7 +53,7 @@ def main():
     utils.log("generated files. saving them to {}".format(save_dir))
     for i, midi in enumerate(generated):
         file = os.path.join(save_dir, '{}.mid'.format(i + 1))
-        midi.save(file)
+        midi.write(file)
         utils.log('wrote midi file to {}'.format(file))
 
 if __name__ == '__main__':
