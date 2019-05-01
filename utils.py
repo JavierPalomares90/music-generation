@@ -354,21 +354,21 @@ def _get_pretty_midi_from_model_output(generated_notes,
     # Create a PrettyMIDI object
     midi = pretty_midi.PrettyMIDI()
     # Create an Instrument instance for a piano
-    instrument_program = midi.instrument_name_to_program(instrument_name)
-    instrument_track = midi.Instrument(program=instrument_program)
+    instrument_program = instrument_name_to_program(instrument_name)
+    instrument_track = Instrument(program=instrument_program)
 
     cur_note = None  # an invalid note to start with
     cur_note_start = None
     clock = 0
 
     for note in generated_notes:
-        note_num = np.argmax(w) - 1
+        note_num = np.argmax(note) - 1
 
         # Iterate over note names, which will be converted to note number later
         for note_num in generated_notes:
 
             # a note has changed
-            if allow_represses or note_num != cur_note:
+            if allow_represses or cur_note is None or note_num != cur_note:
 
                 # if a note has been played before and it wasn't a rest
                 if cur_note is not None and cur_note >= 0 and cur_note is not REST_NOTE:
