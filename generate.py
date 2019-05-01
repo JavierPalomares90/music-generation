@@ -36,7 +36,7 @@ def main():
         utils.log("Created save dir {}".format(save_dir))
 
     utils.log("Saving generated_midis to {}".format(save_dir))
-    model, epoch = train.get_model(args, experiment_dir=experiment_dir)
+    model = train.get_model(args, experiment_dir=experiment_dir)
     utils.log("Loaded model from {}".format(os.path.join(experiment_dir,"model.json")))
 
     window_size = model.layers[0].get_input_shape_at(0)[1]
