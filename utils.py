@@ -364,31 +364,28 @@ def _get_pretty_midi_from_model_output(generated_notes,
     for note in generated_notes:
         note_num = np.argmax(note) - 1
 
-        # Iterate over note names, which will be converted to note number later
-        for note_num in generated_notes:
+        # a note has changed
+        if allow_represses or note_num != cur_note:
 
-            # a note has changed
-            if allow_represses or cur_note is None or note_num != cur_note:
+            # if a note has been played before and it wasn't a rest
+            if cur_note is not None and cur_note >= 0 and cur_note is not REST_NOTE:
+                # add the last note, now that we have its end time
+                vel = 127 #Highest note striking velocity
+                if (cur_note is REST_NOTE): # If rest is predicted, set zero pitch & velocity midi note
+                    vel = 0
+                    cur_note = 0
+                note = pretty_midi.Note(velocity=vel,
+                                        pitch=int(cur_note),
+                                        start=cur_note_start,
+                                        end=clock)
+                instrument_track.notes.append(note)
 
-                # if a note has been played before and it wasn't a rest
-                if cur_note is not None and cur_note >= 0 and cur_note is not REST_NOTE:
-                    # add the last note, now that we have its end time
-                    vel = 127 #Highest note striking velocity
-                    if (cur_note is REST_NOTE): # If rest is predicted, set zero pitch & velocity midi note
-                        vel = 0
-                        cur_note = 0
-                    note = pretty_midi.Note(velocity=vel,
-                                            pitch=int(cur_note),
-                                            start=cur_note_start,
-                                            end=clock)
-                    instrument_track.notes.append(note)
+            # update the current note
+            cur_note = note_num
+            cur_note_start = clock
 
-                # update the current note
-                cur_note = note_num
-                cur_note_start = clock
-
-            # update the clock
-            clock = clock + 1.0 / 4
+        # update the clock
+        clock = clock + 1.0 / 4
 
     # Add the instrument to the PrettyMIDI object
     midi.instruments.append(instrument_track)
