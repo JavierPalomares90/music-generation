@@ -15,7 +15,6 @@ OUTPUT_SIZE = utils.NUM_NOTES + utils.NUM_VELOCITIES
 #create or load a saved model
 # returns the model and the epoch number (>1 if loaded from a checkpoint)
 def get_model(args,experiment_dir=None):
-    epoch = 0
 
     if not experiment_dir:
         model = Sequential()
@@ -43,7 +42,7 @@ def get_model(args,experiment_dir=None):
         model.add(Dropout(args.dropout))
         model.add(Dense(OUTPUT_SIZE))
     else:
-        model, epoch = utils.load_model_from_checkpoint(experiment_dir)
+        model = utils.load_model_from_checkpoint(experiment_dir)
     # these cli args aren't specified if get_model() is being
     # being called from sample.py
     if 'grad_clip' in args and 'optimizer' in args:
@@ -78,7 +77,7 @@ def get_model(args,experiment_dir=None):
     model.compile(loss='mean_squared_error', 
                   optimizer=optimizer,
                   metrics=['mean_squared_error'])
-    return model, epoch
+    return model
 
 def get_tf_callbacks(experiment_dir, checkpoint_monitor='val_mean_squarred_error'):
     
@@ -128,8 +127,8 @@ def main():
 
     utils.log("Getting model")
 
-    model,epoch = get_model(args)
-    utils.log("Loaded model on epoch={}".format(epoch))
+    model= get_model(args)
+    utils.log("Loaded model")
 
     print(model.summary())
 

@@ -98,16 +98,14 @@ def load_model_from_checkpoint(model_dir):
     with open(os.path.join(model_dir, 'model.json'), 'r') as f:
         model = model_from_json(f.read())
 
-    epoch = 0
     newest_checkpoint = max(glob.iglob(model_dir + 
     	                    '/checkpoints/*.hdf5'), 
                             key=os.path.getctime)
 
     if newest_checkpoint: 
-       epoch = int(newest_checkpoint[-22:-19])
        model.load_weights(newest_checkpoint)
 
-    return model, epoch
+    return model
 
 def get_midi_data(midi_paths,max_num_dfs = 100):
     num_files = len(midi_paths)
