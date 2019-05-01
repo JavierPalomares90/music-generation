@@ -124,8 +124,8 @@ def main():
 
     utils.log("Loading midi files from {}".format(data_dir))
     utils.log("getting data generators")
-    train_data_generator = utils.get_midi_data_generator(midi_files[0:val_split_index],num_threads=1)
-    val_data_generator = utils.get_midi_data_generator(midi_files[val_split_index:],num_threads=1)
+    train_data_generator = utils.get_midi_data_generator(midi_files[0:val_split_index], window_size=args.window_size, num_threads=1)
+    val_data_generator = utils.get_midi_data_generator(midi_files[val_split_index:], window_size=args.window_size, num_threads=1)
 
     utils.log("Getting model")
 
