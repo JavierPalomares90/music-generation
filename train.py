@@ -42,7 +42,6 @@ def get_model(args,experiment_dir=None):
                     model.add(LSTM(**kwargs))
         model.add(Dropout(args.dropout))
         model.add(Dense(OUTPUT_SIZE))
-        model.add(Activation('softmax'))
     else:
         model, epoch = utils.load_model_from_checkpoint(experiment_dir)
     # these cli args aren't specified if get_model() is being
@@ -76,9 +75,9 @@ def get_model(args,experiment_dir=None):
     else: # so instead lets use a default (no training occurs anyway)
         optimizer = Adam()
 
-    model.compile(loss='categorical_crossentropy', 
+    model.compile(loss='mean_squared_error', 
                   optimizer=optimizer,
-                  metrics=['accuracy'])
+                  metrics=['mean_squared_error'])
     return model, epoch
 
 def get_tf_callbacks(experiment_dir, checkpoint_monitor='val_acc'):

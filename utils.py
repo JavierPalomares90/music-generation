@@ -175,9 +175,6 @@ def _encode_sliding_windows(pm_instrument, window_size):
     mask = (summed > 0).astype(float)
     roll = roll[np.argmax(mask):]
 
-    # transform note velocities into 1s
-    roll = (roll > 0).astype(float)
-
     # calculate the percentage of the events that are rests
     # s = np.sum(roll, axis=1)
     # num_silence = len(np.where(s == 0)[0])
@@ -358,32 +355,30 @@ def _get_pretty_midi_from_model_output(generated_notes,
     instrument_track = Instrument(program=instrument_program)
 
     cur_note = None  # an invalid note to start with
-    cur_note_start = None
+    cur_note_start = np.zeros(NUM_NOTES)
     clock = 0
 
     for note in generated_notes:
-        note_num = np.argmax(note) - 1
+        notes = np.where(note >= 1.0)
 
         # a note has changed
-        if allow_represses or note_num != cur_note:
-
-            # if a note has been played before and it wasn't a rest
-            if cur_note is not None and cur_note >= 0 and cur_note is not REST_NOTE:
-                # add the last note, now that we have its end time
-                vel = 127 #Highest note striking velocity
-                if (cur_note is REST_NOTE): # If rest is predicted, set zero pitch & velocity midi note
+        if allow_represses or (np.array_equal(notes,cur_note) == False):
+            notes_on = _get_notes_on(cur_note,notes)
+            notes_off = _get_notes_off(cur_note,notes)
+            for n in notes_on:
+                cur_note_start[n] = clock
+            for n in notes_off:
+                vel = int(note[n])
+                note_num = n
+                start_time = cur_note_start[n]
+                if(n is REST_NOTE):
                     vel = 0
-                    cur_note = 0
-                note = pretty_midi.Note(velocity=vel,
-                                        pitch=int(cur_note),
-                                        start=cur_note_start,
-                                        end=clock)
-                instrument_track.notes.append(note)
-
-            # update the current note
-            cur_note = note_num
-            cur_note_start = clock
-
+                    note_num = 0
+                pretty_midi_note = pretty_midi.Note(velocity=vel,
+                            pitch=note_num,
+                            start=start_time,
+                            end=clock)
+                instrument_track.append(pretty_midi_note)
         # update the clock
         clock = clock + 1.0 / 4
 
