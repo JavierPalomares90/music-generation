@@ -290,18 +290,16 @@ def save_model(model,directory):
     with open(os.path.join(directory, 'model.json'), 'w') as f:
         f.write(model.to_json())
 
-def _get_notes_on(prev_notes,notes):
-    if(prev_notes is None):
-        new_notes = notes;
-    else:
-        new_notes = np.subtract(notes,prev_notes)
-    return np.where(new_notes >= 1)[0]
+def _get_notes_on(notes,threshold = 1):
+    return np.where(notes >= threshold)[0]
 
-def _get_notes_off(prev_notes,notes):
+def _get_notes_off(prev_notes,notes,threshold = 1):
     if(prev_notes is None):
         return []
+    notes = (notes >= threshold).astype(float)
+    prev_notes = (prev_notes >= threshold).atype(float)
     old_notes = np.subtract(prev_notes,notes)
-    return np.where(old_notes >= 1)[0]
+    return np.where(old_notes == 1)[0]
 
 # Parse the encoded notes to a midos MidiFile
 def _get_midi_from_model_output(seed, generated):
@@ -344,38 +342,30 @@ def _get_midi_from_model_output(seed, generated):
 
 # Parse the encoded notes to a midos MidiFile
 def _get_pretty_midi_from_model_output(generated_notes,
-                                       instrument_name='Acoustic Grand Piano',
-                                       allow_represses=False):
+                                       instrument_name='Acoustic Grand Piano'):
     # Create a PrettyMIDI object
     midi = pretty_midi.PrettyMIDI()
     # Create an Instrument instance for a piano
     instrument_program = instrument_name_to_program(instrument_name)
     instrument_track = Instrument(program=instrument_program)
 
-    cur_note = None  # an invalid note to start with
-    cur_note_start = np.zeros(NUM_NOTES)
     clock = 0
 
     for note in generated_notes:
-
-        # a note has changed
-        if allow_represses or (np.array_equal(note,cur_note) == False):
-            notes_on = _get_notes_on(cur_note,note)
-            notes_off = _get_notes_off(cur_note,note)
-            for n in notes_on:
-                cur_note_start[n] = clock
-            for n in notes_off:
-                vel = int(note[n])
-                note_num = n
-                start_time = cur_note_start[n]
-                if(n is REST_NOTE):
-                    vel = 0
-                    note_num = 0
-                pretty_midi_note = pretty_midi.Note(velocity=vel,
-                            pitch=note_num,
-                            start=start_time,
-                            end=clock)
-                instrument_track.append(pretty_midi_note)
+        notes_on = _get_notes_on(note)
+        
+        for n in notes_on:
+            vel = int(note[n])
+            note_num = n
+            start_time = clock
+            if(n is REST_NOTE):
+                vel = 0
+                note_num = 0
+            pretty_midi_note = pretty_midi.Note(velocity=vel,
+                pitch=note_num,
+                start=start_time,
+                end=start_time + 1.0 /4)
+            instrument_track.notes.append(pretty_midi_note)
         # update the clock
         clock = clock + 1.0 / 4
         cur_note = note
