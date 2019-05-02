@@ -74,12 +74,12 @@ def get_model(args,experiment_dir=None):
     else: # so instead lets use a default (no training occurs anyway)
         optimizer = Adam()
 
-    model.compile(loss='mean_squared_error', 
+    model.compile(loss='absolute_difference', 
                   optimizer=optimizer,
-                  metrics=['mean_squared_error'])
+                  metrics=['mean_absolute_error'])
     return model
 
-def get_tf_callbacks(experiment_dir, checkpoint_monitor='val_mean_squarred_error'):
+def get_tf_callbacks(experiment_dir, checkpoint_monitor='val_absolute_error'):
     
     callbacks = []
     
