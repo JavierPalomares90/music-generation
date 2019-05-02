@@ -41,7 +41,7 @@ def get_model(args,experiment_dir=None):
                     kwargs['return_sequences'] = False
                     model.add(LSTM(**kwargs))
         model.add(Dropout(args.dropout))
-        model.add(Dense(OUTPUT_SIZE),kernel_regularizer=l1(.01))
+        model.add(Dense(OUTPUT_SIZE,kernel_regularizer=l1(.01)))
     else:
         model = utils.load_model_from_checkpoint(experiment_dir)
     # these cli args aren't specified if get_model() is being
