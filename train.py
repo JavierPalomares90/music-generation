@@ -74,7 +74,7 @@ def get_model(args,experiment_dir=None):
     else: # so instead lets use a default (no training occurs anyway)
         optimizer = Adam()
 
-    model.compile(loss='absolute_difference', 
+    model.compile(loss='mean_absolute_error', 
                   optimizer=optimizer,
                   metrics=['mean_absolute_error'])
     return model
