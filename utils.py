@@ -295,13 +295,13 @@ def _get_notes_on(prev_notes,notes):
         new_notes = notes;
     else:
         new_notes = np.subtract(notes,prev_notes)
-    return np.where(new_notes == 1)[0]
+    return np.where(new_notes >= 1)[0]
 
 def _get_notes_off(prev_notes,notes):
     if(prev_notes is None):
         return []
     old_notes = np.subtract(prev_notes,notes)
-    return np.where(old_notes == 1)[0]
+    return np.where(old_notes >= 1)[0]
 
 # Parse the encoded notes to a midos MidiFile
 def _get_midi_from_model_output(seed, generated):
@@ -357,12 +357,11 @@ def _get_pretty_midi_from_model_output(generated_notes,
     clock = 0
 
     for note in generated_notes:
-        notes = np.where(note >= 1.0)
 
         # a note has changed
-        if allow_represses or (np.array_equal(notes,cur_note) == False):
-            notes_on = _get_notes_on(cur_note,notes)
-            notes_off = _get_notes_off(cur_note,notes)
+        if allow_represses or (np.array_equal(note,cur_note) == False):
+            notes_on = _get_notes_on(cur_note,note)
+            notes_off = _get_notes_off(cur_note,note)
             for n in notes_on:
                 cur_note_start[n] = clock
             for n in notes_off:
@@ -379,6 +378,7 @@ def _get_pretty_midi_from_model_output(generated_notes,
                 instrument_track.append(pretty_midi_note)
         # update the clock
         clock = clock + 1.0 / 4
+        cur_note = note
 
     # Add the instrument to the PrettyMIDI object
     midi.instruments.append(instrument_track)
