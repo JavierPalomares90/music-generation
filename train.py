@@ -111,6 +111,7 @@ def get_tf_callbacks(experiment_dir, checkpoint_monitor='val_mean_squarred_error
     return callbacks
 
 def main():
+    epoch = 0
     args = utils.parse_args()
     data_dir = args.data_dir
     utils.log("looking for midi files from {}".format(data_dir))
