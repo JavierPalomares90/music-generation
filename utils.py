@@ -8,8 +8,8 @@ from mido import MidiFile, MidiTrack, Message, MetaMessage
 from keras.models import model_from_json
 from pretty_midi import *
 
-#NUM_NOTES = 128
-NUM_NOTES = 129
+NUM_NOTES = 128
+#NUM_NOTES = 129
 #NUM_VELOCITIES = 128
 NUM_VELOCITIES = 0
 DEFAULT_VELOCITY = 64
@@ -179,9 +179,9 @@ def _encode_sliding_windows(pm_instrument, window_size):
     # print('{}/{} {:.2f} events are rests'.format(num_silence, len(roll), float(num_silence)/float(len(roll))))
 
     # append a feature: 1 to rests and 0 to notes
-    rests = np.sum(roll, axis=1)
-    rests = (rests != 1).astype(float)
-    roll = np.insert(roll, 0, rests, axis=1)
+    # rests = np.sum(roll, axis=1)
+    # rests = (rests != 1).astype(float)
+    # roll = np.insert(roll, 0, rests, axis=1)
 
     windows = []
     for i in range(0, roll.shape[0] - window_size - 1):
