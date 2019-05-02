@@ -7,6 +7,7 @@ from keras.layers import Dense, Activation, Dropout
 from keras.layers import LSTM
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TensorBoard
 from keras.optimizers import SGD, RMSprop, Adagrad, Adadelta, Adam, Adamax, Nadam
+from keras.regularizers import l1
 
 # use 20 percent for validation
 VALIDATION_SPLIT_RATE = 0.2
@@ -40,7 +41,7 @@ def get_model(args,experiment_dir=None):
                     kwargs['return_sequences'] = False
                     model.add(LSTM(**kwargs))
         model.add(Dropout(args.dropout))
-        model.add(Dense(OUTPUT_SIZE))
+        model.add(Dense(OUTPUT_SIZE),kernel_regularizer=l1(.01))
     else:
         model = utils.load_model_from_checkpoint(experiment_dir)
     # these cli args aren't specified if get_model() is being
