@@ -1,0 +1,5 @@
+This is the training on all of the midi files. 
+Training exection:
+
+ python3 train.py --data_dir midi_files/reformated --num_layer 3 --num_epochs 30 --n_jobs 10
+
