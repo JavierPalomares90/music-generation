@@ -1,0 +1,3 @@
+
+python generate.py -e experiments/original-non-format0--dataset/ -s experiments/original-non-format0--dataset/generated_files/seed_a_minor_scale -p midi_files/scales/A/scale_a_minor.mid -f 96 -n 10
+
