@@ -1,4 +1,4 @@
-# music generation readme
+# Music Generation 
 Music is very structured, yet highly dimensional. Our goal is to train a model to learn and recreate this structure in a creative way that also produces melodic, cohesive new content. The purpose of this program is to generate monophonic MIDI files leveraging Long Short-Term Memory Recurring Neural Network (LSTM RNN) using existing MIDI files.
 
 We performed our testing on a Paperspace VM using Keras/Tensorflow-gpu packages for all composer’s music. In our testing we used 30 epochs.
