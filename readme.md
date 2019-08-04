@@ -6,7 +6,7 @@ We performed our testing on a Paperspace VM using Keras/Tensorflow-gpu packages 
 ### Encoding MIDIs
 To generate our music, we used MIDI file to encode our files. A MIDI consists of a list of tracks (with some meta information), and a track is a list of messages. The information contains instructions for note_on, note_off, pitch_change, and control_change. In our experiment, we used MIDIs containing only one track and we only trained the note_on and note_off events.
 
-When a note is pressed, the MIDI protocol message 'note_one' is used, and when a note is released, the 'note_off' protocol is used. A note [0.. 127] will indicate the pitch to play, velocity [0.. 127] is the intensity of the note strike, and time [0.. N] is the number of ticks between notes.
+When a note is pressed, the MIDI protocol message 'note_on' is used, and when a note is released, the 'note_off' protocol is used. A note [0.. 127] will indicate the pitch to play, velocity [0.. 127] is the intensity of the note strike, and time [0.. N] is the number of ticks between notes.
 
 To encode the MIDIs, we used a matrix of N rows with 128 columns with each row representing a beat in the song. When a note i is played with beat j, we set (j, i) = 1, any other elements are set to 0. The resulting matrix is sparsely populated.
 ### Forming Training Data
