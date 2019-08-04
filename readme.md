@@ -8,7 +8,7 @@ To generate our music, we used MIDI file to encode our files. A MIDI consists of
 
 When a note is pressed, the MIDI protocol message 'note_on' is used, and when a note is released, the 'note_off' protocol is used. A note [0.. 127] will indicate the pitch to play, velocity [0.. 127] is the intensity of the note strike, and time [0.. N] is the number of ticks between notes.
 
-To encode the MIDIs, we used a matrix of N rows with 128 columns with each row representing a beat in the song. When a note i is played with beat j, we set (j, i) = 1, any other elements are set to 0. The resulting matrix is sparsely populated.
+To encode the MIDIs, we used a matrix of N rows with 128 columns with each row representing a beat in the song. When a note i is played during beat j, we set (j, i) = 1, any other elements are set to 0. The resulting matrix is sparsely populated.
 ### Forming Training Data
 The music generation is constructed when given the previous k notes, the next note is predicted. A window size must be chosen to form the rolling windows of k consecutive notes (rows from the matrix), and the note (row) that follows. The k notes will be the input features (X), and the preceding note will be the predicted value (y).
 
